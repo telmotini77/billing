@@ -88,6 +88,9 @@ Prisma.NullTypes = {
  * Enums
  */
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -114,6 +117,11 @@ exports.Prisma.BillingInvoiceItemScalarFieldEnum = {
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 
@@ -150,7 +158,8 @@ const config = {
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../../.env"
   },
   "relativePath": "../../../prisma",
   "clientVersion": "6.19.3",
@@ -158,18 +167,18 @@ const config = {
   "datasourceNames": [
     "db"
   ],
-  "activeProvider": "sqlite",
+  "activeProvider": "postgresql",
   "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
-        "fromEnvVar": null,
-        "value": "file:./billing.db"
+        "fromEnvVar": "DATABASE_URL",
+        "value": null
       }
     }
   },
-  "inlineSchema": "datasource db {\n  provider = \"sqlite\"\n  url      = \"file:./billing.db\"\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/billing-client\"\n}\n\nmodel BillingInvoice {\n  id           String               @id @default(uuid())\n  claveAcceso  String               @unique\n  clientName   String\n  amount       Float\n  subtotal     Float\n  iva          Float\n  status       String               @default(\"RECEIVED\")\n  sentToClient Boolean              @default(false)\n  userId       String\n  createdAt    DateTime             @default(now())\n  items        BillingInvoiceItem[]\n}\n\nmodel BillingInvoiceItem {\n  id        String         @id @default(uuid())\n  invoiceId String\n  invoice   BillingInvoice @relation(fields: [invoiceId], references: [id])\n  productId String\n  quantity  Int\n}\n",
-  "inlineSchemaHash": "4baec258894fa73281b52e14a9c0b46dbb3f9aaf2f8345d5ee257b45fc22c49b",
+  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/billing-client\"\n}\n\nmodel BillingInvoice {\n  id           String               @id @default(uuid())\n  claveAcceso  String               @unique\n  clientName   String\n  amount       Float\n  subtotal     Float\n  iva          Float\n  status       String               @default(\"RECEIVED\")\n  sentToClient Boolean              @default(false)\n  userId       String\n  createdAt    DateTime             @default(now())\n  items        BillingInvoiceItem[]\n}\n\nmodel BillingInvoiceItem {\n  id        String         @id @default(uuid())\n  invoiceId String\n  invoice   BillingInvoice @relation(fields: [invoiceId], references: [id])\n  productId String\n  quantity  Int\n}\n",
+  "inlineSchemaHash": "147e931b8abc78fa024939c46c9bb7a86f88579eb113463af3df0905337d1709",
   "copyEngine": true
 }
 
