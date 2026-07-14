@@ -1,0 +1,31 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/billing-client"
+}
+
+model BillingInvoice {
+  id          String              @id @default(uuid())
+  claveAcceso String              @unique
+  clientName  String
+  amount      Float
+  subtotal    Float
+  iva         Float
+  status      String              @default("RECEIVED")
+  sentToClient Boolean             @default(false)
+  userId      String
+  createdAt   DateTime            @default(now())
+  items       BillingInvoiceItem[]
+}
+
+model BillingInvoiceItem {
+  id        String         @id @default(uuid())
+  invoiceId String
+  invoice   BillingInvoice @relation(fields: [invoiceId], references: [id])
+  productId String
+  quantity  Int
+}
