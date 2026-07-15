@@ -29,3 +29,41 @@ model BillingInvoiceItem {
   productId String
   quantity  Int
 }
+
+model User {
+  id        String   @id
+  email     String   @unique
+  password  String
+  name      String
+  ruc       String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  sriSimulate       Boolean @default(true)
+  sriEnvironment    String  @default("1")
+  signatureBase64   String?
+  signaturePassword String?
+  
+  isBranch             Boolean @default(false)
+  parentCompanyRuc     String?
+  establishmentCode    String  @default("001")
+  emissionPoint        String  @default("002")
+  establishmentAddress String  @default("Av. de los Granados N45 y Eloy Alfaro, Quito")
+
+  employees        Employee[]
+
+  @@map("users")
+}
+
+model Employee {
+  id        String   @id
+  name      String
+  email     String   @unique
+  password  String   
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("employees")
+}
+

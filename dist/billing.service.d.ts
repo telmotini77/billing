@@ -64,4 +64,16 @@ export declare class BillingService {
         userId: string;
         createdAt: Date;
     }>;
+    loginEmployee(email: string, password: string): Promise<{
+        user: {
+            id: string;
+            email: string;
+            name: string;
+            role: string;
+            ownerId: string;
+            ownerRuc: string;
+            ownerName: string;
+        };
+        accessToken: string;
+    }>;
 }

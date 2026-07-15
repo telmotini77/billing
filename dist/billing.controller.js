@@ -12,7 +12,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BillingController = void 0;
+exports.AuthController = exports.BillingController = void 0;
 const common_1 = require("@nestjs/common");
 const billing_service_js_1 = require("./billing.service.js");
 let BillingController = class BillingController {
@@ -74,4 +74,27 @@ exports.BillingController = BillingController = __decorate([
     (0, common_1.Controller)('invoices'),
     __metadata("design:paramtypes", [billing_service_js_1.BillingService])
 ], BillingController);
+let AuthController = class AuthController {
+    billingService;
+    constructor(billingService) {
+        this.billingService = billingService;
+    }
+    async loginEmployee(body) {
+        const email = body.email || '';
+        const password = body.password || '';
+        return this.billingService.loginEmployee(email, password);
+    }
+};
+exports.AuthController = AuthController;
+__decorate([
+    (0, common_1.Post)('login-employee'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "loginEmployee", null);
+exports.AuthController = AuthController = __decorate([
+    (0, common_1.Controller)('auth'),
+    __metadata("design:paramtypes", [billing_service_js_1.BillingService])
+], AuthController);
 //# sourceMappingURL=billing.controller.js.map

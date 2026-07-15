@@ -40,3 +40,22 @@ export declare class BillingController {
         success: boolean;
     }>;
 }
+export declare class AuthController {
+    private readonly billingService;
+    constructor(billingService: BillingService);
+    loginEmployee(body: {
+        email?: string;
+        password?: string;
+    }): Promise<{
+        user: {
+            id: string;
+            email: string;
+            name: string;
+            role: string;
+            ownerId: string;
+            ownerRuc: string;
+            ownerName: string;
+        };
+        accessToken: string;
+    }>;
+}

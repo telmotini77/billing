@@ -19,7 +19,7 @@ exports.BillingModule = BillingModule;
 exports.BillingModule = BillingModule = __decorate([
     (0, common_1.Module)({
         imports: [],
-        controllers: [billing_controller_js_1.BillingController],
+        controllers: [billing_controller_js_1.BillingController, billing_controller_js_1.AuthController],
         providers: [billing_service_js_1.BillingService, prisma_service_js_1.PrismaService, sri_signer_service_js_1.SriSignerService, sri_soap_service_js_1.SriSoapService],
         exports: [billing_service_js_1.BillingService],
     })

@@ -113,6 +113,34 @@ exports.Prisma.BillingInvoiceItemScalarFieldEnum = {
   quantity: 'quantity'
 };
 
+exports.Prisma.UserScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  password: 'password',
+  name: 'name',
+  ruc: 'ruc',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  sriSimulate: 'sriSimulate',
+  sriEnvironment: 'sriEnvironment',
+  signatureBase64: 'signatureBase64',
+  signaturePassword: 'signaturePassword',
+  isBranch: 'isBranch',
+  parentCompanyRuc: 'parentCompanyRuc',
+  establishmentCode: 'establishmentCode',
+  emissionPoint: 'emissionPoint',
+  establishmentAddress: 'establishmentAddress'
+};
+
+exports.Prisma.EmployeeScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  password: 'password',
+  ownerId: 'ownerId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -123,10 +151,17 @@ exports.Prisma.QueryMode = {
   insensitive: 'insensitive'
 };
 
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
+};
+
 
 exports.Prisma.ModelName = {
   BillingInvoice: 'BillingInvoice',
-  BillingInvoiceItem: 'BillingInvoiceItem'
+  BillingInvoiceItem: 'BillingInvoiceItem',
+  User: 'User',
+  Employee: 'Employee'
 };
 /**
  * Create the Client
@@ -176,13 +211,13 @@ const config = {
       }
     }
   },
-  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/billing-client\"\n}\n\nmodel BillingInvoice {\n  id           String               @id @default(uuid())\n  claveAcceso  String               @unique\n  clientName   String\n  amount       Float\n  subtotal     Float\n  iva          Float\n  status       String               @default(\"RECEIVED\")\n  sentToClient Boolean              @default(false)\n  userId       String\n  createdAt    DateTime             @default(now())\n  items        BillingInvoiceItem[]\n}\n\nmodel BillingInvoiceItem {\n  id        String         @id @default(uuid())\n  invoiceId String\n  invoice   BillingInvoice @relation(fields: [invoiceId], references: [id])\n  productId String\n  quantity  Int\n}\n",
-  "inlineSchemaHash": "147e931b8abc78fa024939c46c9bb7a86f88579eb113463af3df0905337d1709",
+  "inlineSchema": "datasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/billing-client\"\n}\n\nmodel BillingInvoice {\n  id           String               @id @default(uuid())\n  claveAcceso  String               @unique\n  clientName   String\n  amount       Float\n  subtotal     Float\n  iva          Float\n  status       String               @default(\"RECEIVED\")\n  sentToClient Boolean              @default(false)\n  userId       String\n  createdAt    DateTime             @default(now())\n  items        BillingInvoiceItem[]\n}\n\nmodel BillingInvoiceItem {\n  id        String         @id @default(uuid())\n  invoiceId String\n  invoice   BillingInvoice @relation(fields: [invoiceId], references: [id])\n  productId String\n  quantity  Int\n}\n\nmodel User {\n  id        String   @id\n  email     String   @unique\n  password  String\n  name      String\n  ruc       String   @unique\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  sriSimulate       Boolean @default(true)\n  sriEnvironment    String  @default(\"1\")\n  signatureBase64   String?\n  signaturePassword String?\n\n  isBranch             Boolean @default(false)\n  parentCompanyRuc     String?\n  establishmentCode    String  @default(\"001\")\n  emissionPoint        String  @default(\"002\")\n  establishmentAddress String  @default(\"Av. de los Granados N45 y Eloy Alfaro, Quito\")\n\n  employees Employee[]\n\n  @@map(\"users\")\n}\n\nmodel Employee {\n  id        String   @id\n  name      String\n  email     String   @unique\n  password  String\n  ownerId   String\n  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)\n  createdAt DateTime @default(now())\n\n  @@map(\"employees\")\n}\n",
+  "inlineSchemaHash": "cbd43f07b81a80d53e74c36529985e6476bb1a426ab3bcb20651bb7c7ecd747c",
   "copyEngine": true
 }
 config.dirname = '/'
 
-config.runtimeDataModel = JSON.parse("{\"models\":{\"BillingInvoice\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"claveAcceso\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clientName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"amount\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"subtotal\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"iva\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sentToClient\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"items\",\"kind\":\"object\",\"type\":\"BillingInvoiceItem\",\"relationName\":\"BillingInvoiceToBillingInvoiceItem\"}],\"dbName\":null},\"BillingInvoiceItem\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"invoiceId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"invoice\",\"kind\":\"object\",\"type\":\"BillingInvoice\",\"relationName\":\"BillingInvoiceToBillingInvoiceItem\"},{\"name\":\"productId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"}],\"dbName\":null}},\"enums\":{},\"types\":{}}")
+config.runtimeDataModel = JSON.parse("{\"models\":{\"BillingInvoice\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"claveAcceso\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"clientName\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"amount\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"subtotal\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"iva\",\"kind\":\"scalar\",\"type\":\"Float\"},{\"name\":\"status\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"sentToClient\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"userId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"items\",\"kind\":\"object\",\"type\":\"BillingInvoiceItem\",\"relationName\":\"BillingInvoiceToBillingInvoiceItem\"}],\"dbName\":null},\"BillingInvoiceItem\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"invoiceId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"invoice\",\"kind\":\"object\",\"type\":\"BillingInvoice\",\"relationName\":\"BillingInvoiceToBillingInvoiceItem\"},{\"name\":\"productId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"quantity\",\"kind\":\"scalar\",\"type\":\"Int\"}],\"dbName\":null},\"User\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"ruc\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"updatedAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"},{\"name\":\"sriSimulate\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"sriEnvironment\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"signatureBase64\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"signaturePassword\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"isBranch\",\"kind\":\"scalar\",\"type\":\"Boolean\"},{\"name\":\"parentCompanyRuc\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"establishmentCode\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"emissionPoint\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"establishmentAddress\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"employees\",\"kind\":\"object\",\"type\":\"Employee\",\"relationName\":\"EmployeeToUser\"}],\"dbName\":\"users\"},\"Employee\":{\"fields\":[{\"name\":\"id\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"name\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"email\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"password\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"ownerId\",\"kind\":\"scalar\",\"type\":\"String\"},{\"name\":\"owner\",\"kind\":\"object\",\"type\":\"User\",\"relationName\":\"EmployeeToUser\"},{\"name\":\"createdAt\",\"kind\":\"scalar\",\"type\":\"DateTime\"}],\"dbName\":\"employees\"}},\"enums\":{},\"types\":{}}")
 defineDmmfProperty(exports.Prisma, config.runtimeDataModel)
 config.engineWasm = {
   getRuntime: async () => require('./query_engine_bg.js'),

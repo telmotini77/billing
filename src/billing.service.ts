@@ -1,7 +1,9 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from './prisma.service.js';
 import { SriSignerService } from './sri-signer.service.js';
 import { SriSoapService } from './sri-soap.service.js';
+import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 
 export class BillingInvoiceItemInput {
   productId!: string;
@@ -53,15 +55,15 @@ export class BillingService {
     if (!inv) throw new BadRequestException('Factura no encontrada.');
 
     let address = 'Av. de los Granados N45 y Eloy Alfaro, Quito';
-    const backendUrl = process.env.BACKEND_URL || `http://127.0.0.1:${process.env.BACKEND_PORT || '3000'}`;
     try {
-      const res = await fetch(`${backendUrl}/auth/profile/sri-config-internal?userId=${userId}`);
-      if (res.ok) {
-        const data = (await res.json()) as { establishmentAddress?: string };
-        if (data.establishmentAddress) address = data.establishmentAddress;
+      const dbUser = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (dbUser && dbUser.establishmentAddress) {
+        address = dbUser.establishmentAddress;
       }
     } catch (e) {
-      console.error('Failed to fetch address for XML preview:', e);
+      console.error('Failed to fetch address for XML preview from DB:', e);
     }
 
     const estab = inv.claveAcceso.slice(24, 27);
@@ -113,6 +115,8 @@ export class BillingService {
       iva = Number((amount - subtotal).toFixed(2));
     }
 
+    const backendUrl = process.env.BACKEND_URL || `http://127.0.0.1:${process.env.BACKEND_PORT || '3000'}`;
+
     // Determine initial values or query backend fallback profile
     let p12Buffer = user.signatureBase64
       ? Buffer.from(user.signatureBase64, 'base64')
@@ -122,34 +126,28 @@ export class BillingService {
     let ptoEmi = user.emissionPoint || '002';
     let address = user.establishmentAddress || 'Av. de los Granados N45 y Eloy Alfaro, Quito';
 
-    const backendUrl = process.env.BACKEND_URL || `http://127.0.0.1:${process.env.BACKEND_PORT || '3000'}`;
     if (!p12Buffer || !user.establishmentCode) {
       try {
-        const res = await fetch(`${backendUrl}/auth/profile/sri-config-internal?userId=${user.id}`);
-        if (res.ok) {
-          const data = (await res.json()) as { 
-            signatureBase64?: string; 
-            signaturePassword?: string;
-            establishmentCode?: string;
-            emissionPoint?: string;
-            establishmentAddress?: string;
-          };
-          if (data.signatureBase64 && !p12Buffer) {
-            p12Buffer = Buffer.from(data.signatureBase64, 'base64');
-            passphrase = data.signaturePassword;
+        const dbUser = await this.prisma.user.findUnique({
+          where: { id: user.id },
+        });
+        if (dbUser) {
+          if (dbUser.signatureBase64 && !p12Buffer) {
+            p12Buffer = Buffer.from(dbUser.signatureBase64, 'base64');
+            passphrase = dbUser.signaturePassword ?? undefined;
           }
-          if (data.establishmentCode) {
-            estab = data.establishmentCode;
+          if (dbUser.establishmentCode) {
+            estab = dbUser.establishmentCode;
           }
-          if (data.emissionPoint) {
-            ptoEmi = data.emissionPoint;
+          if (dbUser.emissionPoint) {
+            ptoEmi = dbUser.emissionPoint;
           }
-          if (data.establishmentAddress) {
-            address = data.establishmentAddress;
+          if (dbUser.establishmentAddress) {
+            address = dbUser.establishmentAddress;
           }
         }
       } catch (err) {
-        console.error('Failed to fetch signature from accounting backend:', err);
+        console.error('Failed to fetch signature from database:', err);
       }
     }
 
@@ -264,5 +262,64 @@ export class BillingService {
     }
 
     return invoice;
+  }
+
+  async loginEmployee(email: string, password: string) {
+    // 1. Find employee
+    const employee = await this.prisma.employee.findUnique({
+      where: { email },
+      include: { owner: true },
+    });
+
+    if (employee) {
+      const isPasswordValid = await bcrypt.compare(password, employee.password);
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Credenciales incorrectas.');
+      }
+
+      const payload = { email: employee.email, sub: employee.id, role: 'employee', ownerId: employee.ownerId };
+      const token = jwt.sign(payload, process.env.JWT_SECRET || 'super-secret-jwt-key-2026-aura-contable', { expiresIn: '24h' });
+      return {
+        user: {
+          id: employee.id,
+          email: employee.email,
+          name: employee.name,
+          role: 'employee',
+          ownerId: employee.ownerId,
+          ownerRuc: employee.owner.ruc,
+          ownerName: employee.owner.name,
+        },
+        accessToken: token,
+      };
+    }
+
+    // 2. Fallback: Find User (Owner)
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Credenciales incorrectas.');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Credenciales incorrectas.');
+    }
+
+    const payload = { email: user.email, sub: user.id, role: 'owner', ownerId: user.id };
+    const token = jwt.sign(payload, process.env.JWT_SECRET || 'super-secret-jwt-key-2026-aura-contable', { expiresIn: '24h' });
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: 'owner',
+        ownerId: user.id,
+        ownerRuc: user.ruc,
+        ownerName: user.name,
+      },
+      accessToken: token,
+    };
   }
 }

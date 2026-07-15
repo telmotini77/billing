@@ -36,3 +36,16 @@ export class BillingController {
     return { success: true };
   }
 }
+
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly billingService: BillingService) {}
+
+  @Post('login-employee')
+  async loginEmployee(@Body() body: { email?: string; password?: string }) {
+    const email = body.email || '';
+    const password = body.password || '';
+    return this.billingService.loginEmployee(email, password);
+  }
+}
+
